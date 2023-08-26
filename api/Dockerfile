@@ -1,4 +1,6 @@
-FROM ubuntu:latest
-LABEL authors="paolo"
+FROM tiangolo/uvicorn-gunicorn-fastapi:python3.8
 
-ENTRYPOINT ["top", "-b"]
+COPY ./api /app
+WORKDIR /app
+
+RUN pip install --no-cache-dir -r requirements.txt
