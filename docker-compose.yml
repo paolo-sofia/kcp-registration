@@ -1,36 +1,48 @@
 version: "3"
+
+networks:
+  network-proxy:
+    external: true
+
 services:
   api:
+    hostname: api
     build:
-      context: ./api
+      dockerfile: api/Dockerfile
+      context: ./
     ports:
       - "8000:8000"
     depends_on:
       - db
+    networks:
+      - network-proxy
   frontend:
+    hostname: frontend
     build:
-      context: ./frontend
+      dockerfile: frontend_app/Dockerfile
+      context: ./
     ports:
       - "8501:8501"
     environment:
       - API_URL=http://api:8000
     depends_on:
       - api
+    networks:
+      - network-proxy
   db:
-    image: postgres:latest
+    hostname: db
+    build:
+      dockerfile: db/Dockerfile
+      context: ./
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: 'asd_motorart'
+      POSTGRES_PASSWORD: 'asd_motorart'
+      POSTGRES_DB: 'asdmotorart'
+    ports:
+      - "5432:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
-  duckdns:
-    image: linuxserver/duckdns:latest
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - SUBDOMAINS=${SUBDOMAINS}
-      - TOKEN=${DUCKDNS_TOKEN}
+    networks:
+      - network-proxy
 volumes:
   db-data:
