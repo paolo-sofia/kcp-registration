@@ -10,16 +10,17 @@ class UserBase(BaseModel):
     nome: str
     cognome: str
     data_nascita: str
-    luogo_nascita: str
-    luogo_residenza: str
-    via_residenza: str
-    telefono: Optional[str]
+    luogo_nascita: Optional[str] = ''
+    luogo_residenza: Optional[str] = ''
+    via_residenza: Optional[str] = ''
+    telefono: Optional[str] = ''
 
 class UserCreate(UserBase):
     pass
 
 class User(UserBase):
     id: int
+    data_registrazione: str
 
     class Config:
         orm_mode = True

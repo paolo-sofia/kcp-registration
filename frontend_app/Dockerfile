@@ -8,6 +8,8 @@ RUN pip install -r /app/frontend_app/requirements.txt
 COPY frontend_app/main.py /app/main.py
 COPY frontend_app/__init__.py /app/frontend_app/__init__.py
 
+COPY database /app/database
+
 EXPOSE 8501
 
 HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health
