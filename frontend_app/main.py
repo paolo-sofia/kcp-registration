@@ -1,10 +1,11 @@
-import datetime
 import json
 import logging
+import time
 from enum import StrEnum
 from hashlib import sha256
 from typing import Any, Dict, List, Optional
 
+import pendulum
 import qrcode
 import requests
 import streamlit as st
@@ -20,6 +21,7 @@ HEADERS = {
 }
 
 API_BASE_URL: str = "http://api:8000"
+DEFAULT_TIMEZONE: str = "Europe/Rome"
 
 
 class FormName(StrEnum):
@@ -45,7 +47,7 @@ def decodifica_codice_fiscale(cod_fiscale: str) -> Dict[str, Any]:
 
     decoded_cod_fiscale: Dict[str, Any] = codicefiscale.decode(cod_fiscale)
     return {
-        FormName.DATA_NASCITA: decoded_cod_fiscale.get("birthdate", pendulum.datetime(1970, 1, 1)),
+        FormName.DATA_NASCITA: decoded_cod_fiscale.get("birthdate", pendulum.datetime(1970, 1, 1, tz=DEFAULT_TIMEZONE)),
         FormName.LUOGO_NASCITA: decoded_cod_fiscale.get("birthplace", {}).get("name", ""),
         FormName.PROVINCIA_NASCITA: decoded_cod_fiscale.get("birthplace", {}).get("province", ""),
     }
@@ -111,21 +113,19 @@ def validate_data(user_data: Dict[str, Any]) -> bool:
     return False
 
 
-def validate_child(child: Dict[str, str], child_min_date: datetime.date) -> bool:
-    default_date: str = datetime.date.today().strftime("%Y-%m-%d")
+def validate_child(child: Dict[str, str], child_min_date: pendulum.Date) -> bool:
+    default_date: str = pendulum.today().date().strftime("%Y-%m-%d")
     return bool(
         child.get(FormName.NOME, "")
         and child.get(FormName.COGNOME, "")
-        and datetime.datetime.strptime(child.get(FormName.DATA_NASCITA, default_date),
-                                       "%Y-%m-%d").date() > child_min_date
+        and pendulum.from_format(child.get(FormName.DATA_NASCITA, default_date), "YYYY-MM-DD",
+                                 tz="Europe/Rome").date() > child_min_date
         and codicefiscale.is_valid(child.get(FormName.CODICE_FISCALE, "")),
     )
 
 
 def validate_children(children: List[Dict[str, str]]) -> bool:
-    child_min_date: datetime.date = datetime.date.today()
-    child_min_date: datetime.date = datetime.date(child_min_date.year - 18, child_min_date.month,
-                                                  child_min_date.day + 1)
+    child_min_date: pendulum.Date = pendulum.today(DEFAULT_TIMEZONE).today().subtract(years=18).add(days=1)
 
     return all(validate_child(child, child_min_date) for child in children)
 
@@ -135,17 +135,11 @@ def add_child() -> List[Dict[str, str]]:
         print("children not in session state")
         st.session_state["children"] = []
 
-    today: datetime = datetime.date.today()
-    child_min_date = datetime.date(
-        year=today.year - 18,
-        month=today.month,
-        day=today.day + 1,
-    )
-    child_max_date: datetime.date = datetime.date(
-        year=today.year - 7,
-        month=child_min_date.month,
-        day=child_min_date.day,
-    )
+    today: pendulum.datetime = pendulum.today(DEFAULT_TIMEZONE)
+
+    child_min_date: pendulum.date = today.subtract(years=18).add(days=1).date()
+    child_max_date: pendulum.date = today.subtract(years=6).date()
+
     st.subheader("Sezione Genitori")
     accept_child: bool = st.checkbox(
         label="Dichiaro di esercitare la potestà genitoriale sul/i minorenne/i registrato in quanto padre o madre dello stesso"
@@ -223,7 +217,7 @@ def registration_form(user_to_renew: schemas.User = None):
             FormName.CODICE_FISCALE: st.session_state[FormName.CODICE_FISCALE] or "",
             FormName.NOME: st.session_state[FormName.NOME] or "",
             FormName.COGNOME: st.session_state[FormName.COGNOME] or "",
-            FormName.DATA_NASCITA: st.session_state[FormName.DATA_NASCITA] or datetime.date(1970, 1, 1),
+            FormName.DATA_NASCITA: st.session_state[FormName.DATA_NASCITA] or pendulum.date(1970, 1, 1),
             FormName.LUOGO_NASCITA: st.session_state[FormName.LUOGO_NASCITA] or "",
             FormName.LUOGO_RESIDENZA: st.session_state[FormName.LUOGO_RESIDENZA] or "",
             FormName.VIA_RESIDENZA: st.session_state[FormName.VIA_RESIDENZA] or "",
@@ -235,7 +229,7 @@ def registration_form(user_to_renew: schemas.User = None):
             FormName.CODICE_FISCALE: "",
             FormName.NOME: "",
             FormName.COGNOME: "",
-            FormName.DATA_NASCITA: datetime.date(1970, 1, 1),
+            FormName.DATA_NASCITA: pendulum.date(1970, 1, 1),
             FormName.LUOGO_NASCITA: "",
             FormName.LUOGO_RESIDENZA: "",
             FormName.VIA_RESIDENZA: "",
@@ -243,7 +237,7 @@ def registration_form(user_to_renew: schemas.User = None):
         }
 
     # with st.form('registration_form'):
-    today: datetime.date = datetime.date.today()
+    today: pendulum.date = pendulum.today().date()
 
     fiscal_code = st.text_input(
         label="Codice Fiscale :red[*]",
@@ -261,7 +255,10 @@ def registration_form(user_to_renew: schemas.User = None):
         )
         birth_date = st.date_input(
             label="Data di Nascita :red[*]",
-            value=decoded_cod_fiscale.get(FormName.DATA_NASCITA, datetime.datetime(1970, 1, 1)).date(),
+            value=decoded_cod_fiscale.get(FormName.DATA_NASCITA,
+                                          pendulum.datetime(1970, 1, 1, tz=DEFAULT_TIMEZONE)).date(),
+            min_value=today.replace(year=today.year - 100),
+            max_value=today.replace(year=today.year - 18),
             disabled=st.session_state.renew,
         )
     else:
@@ -272,9 +269,9 @@ def registration_form(user_to_renew: schemas.User = None):
         )
         birth_date = st.date_input(
             label="Data di Nascita :red[*]",
-            min_value=datetime.date(today.year - 100, 1, 1),
             value=default_values[FormName.DATA_NASCITA],
-            max_value=datetime.date(today.year - 18, today.month, today.day),
+            min_value=today.replace(year=today.year - 100),
+            max_value=today.replace(year=today.year - 18),
             disabled=st.session_state.renew,
         )
 
@@ -343,6 +340,8 @@ def registration_form(user_to_renew: schemas.User = None):
     st.write(f"Children {children}")
     if not children:
         clear_session_state()
+        time.sleep(2)
+        st.experimental_rerun()
         return
 
     children_ids: List[int] = save_children_to_db(children, parent_id)
@@ -356,6 +355,8 @@ def registration_form(user_to_renew: schemas.User = None):
     st.write(f"Before clearing session\n{st.session_state}")
     clear_session_state()
     st.write(f"After clearing session\n{st.session_state}")
+    time.sleep(2)
+    st.experimental_rerun()
 
 
 def remove_children_from_db(children_id: List[int]) -> bool:
@@ -433,10 +434,27 @@ def already_registered_form() -> Optional[schemas.User]:
     return None
 
 
+def check_if_minor_at_date(data_nascita: pendulum.datetime, other_date: pendulum.datetime) -> bool:
+    if other_date.year - data_nascita.year < 18:
+        return True
+
+    if other_date.month - data_nascita.month < 0:
+        return True
+
+    if other_date.day - data_nascita.day < 0:
+        return True
+    return False
+
+
 def check_if_user_needs_renew(data_registrazione: str, data_nascita: str) -> bool:
-    data_registrazione: datetime.datetime = datetime.datetime.strptime(data_registrazione, "%Y-%m-%d")
-    data_nascita: datetime.datetime = datetime.datetime.strptime(data_nascita, "%Y-%m-%d")
-    return (datetime.datetime.now() - data_registrazione).days > 365
+    data_registrazione: pendulum.datetime = pendulum.from_format(data_registrazione, "YYYY-MM-DD", tz=DEFAULT_TIMEZONE)
+    data_nascita: pendulum.datetime = pendulum.from_format(data_nascita, "YYYY-MM-DD", tz=DEFAULT_TIMEZONE)
+
+    is_default_renew: bool = pendulum.now(tz=DEFAULT_TIMEZONE).diff(data_registrazione).days > 365
+    is_minor_at_date: bool = check_if_minor_at_date(data_nascita, data_registrazione)
+    is_minor_today: bool = check_if_minor_at_date(data_nascita, pendulum.today(tz=DEFAULT_TIMEZONE))
+
+    return is_default_renew or (is_minor_at_date and not is_minor_today)
 
 
 def main():

@@ -1,11 +1,12 @@
 import logging
-from datetime import datetime
 from typing import Any, List, Type
 
+import pendulum
 from sqlalchemy.orm import Session
 
 from database import models, schemas
-from database.database import local_timezone
+
+DEFAULT_TIMEZONE: str = "Europe/Rome"
 
 logger = next(logging.getLogger(name) for name in logging.root.manager.loggerDict)
 
@@ -93,7 +94,7 @@ def remove_child_by_id(db: Session, child_id: int):
 
 
 def add_group(db: Session, users: List[schemas.User], group_name: str, ticket_id: int) -> schemas.Group:
-    now: datetime = datetime.now(tz=local_timezone)
+    now: pendulum.datetime = pendulum.now(tz=DEFAULT_TIMEZONE)
 
     if ticket_id > 100:
         ticket_id %= 101
@@ -133,7 +134,7 @@ def update_user(db: Session, user: schemas.UserBase) -> Type[models.User]:
         models.User.luogo_residenza.name: user.luogo_residenza,
         models.User.via_residenza.name: user.via_residenza,
         models.User.telefono.name: user.telefono,
-        models.User.data_registrazione.name: datetime.today().date(),
+        models.User.data_registrazione.name: pendulum.today(tz=DEFAULT_TIMEZONE).date(),
     }
     matched_rows: int = db.query(models.User).filter(models.User.id == db_user.id).update(update_dict)
     db.commit()
@@ -150,6 +151,6 @@ def renew_user(db: Session, fiscal_code: str) -> bool:
     if not db_user:
         raise Exception("User not present in the db")
 
-    update_dict = {schemas.User.data_registrazione: datetime.now(tz=local_timezone)}
+    update_dict = {schemas.User.data_registrazione: pendulum.now(tz=DEFAULT_TIMEZONE)}
 
     return db.query(models.User).filter(models.User.codice_fiscale == db_user.codice_fiscale).update(update_dict) == 1
