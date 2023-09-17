@@ -1,8 +1,8 @@
 version: "3"
 
-networks:
-  network-proxy:
-    external: true
+#networks:
+#  network-proxy:
+#    external: true
 
 services:
   api:
@@ -14,8 +14,8 @@ services:
       - "8000:8000"
     depends_on:
       - db
-    networks:
-      - network-proxy
+  #    networks:
+  #      - network-proxy
   frontend:
     hostname: frontend
     build:
@@ -27,8 +27,8 @@ services:
       - API_URL=http://api:8000
     depends_on:
       - api
-    networks:
-      - network-proxy
+  #    networks:
+  #      - network-proxy
   db:
     hostname: db
     build:
@@ -42,7 +42,7 @@ services:
       - "5432:5432"
     volumes:
       - /home/paolo/git/kcp-registration/db-data:/var/lib/postgresql/data
-    networks:
-      - network-proxy
+#    networks:
+#      - network-proxy
 volumes:
   db-data:

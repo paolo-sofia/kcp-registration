@@ -12,8 +12,8 @@ from database.schemas import Group
 logger = next(logging.getLogger(name) for name in logging.root.manager.loggerDict)
 models.Base.metadata.create_all(bind=engine)
 
-
 app = FastAPI()
+
 
 # Dependency
 def get_db():
@@ -30,6 +30,7 @@ async def sign_up(user: schemas.UserCreate, db: Session = Depends(get_db)):
         return crud.add_user(db=db, user=user)
     except Exception as e:
         return {"message": "Data not found", "data": f"{e}", "original": user.model_dump()}
+
 
 @app.get("/users/{fiscal_code}")
 async def get_user(fiscal_code: str, db: Session = Depends(get_db)):
@@ -55,14 +56,15 @@ async def remove_children(children_id: List[int], db: Session = Depends(get_db))
     except Exception as e:
         return {"message": "Data not found", "data": f"{e}"}
 
+
 @app.post("/childrens/{parent_id}")
-async def add_children(children: List[schemas.UserCreate], parent_id: int, db: Session = Depends(get_db)) -> \
+async def add_children(parent_id: int, children: List[schemas.UserCreate], db: Session = Depends(get_db)) -> \
         Dict[str, str] | List[int]:
-    logger.warning(f'children received in add_children fastapi method {children}')
+    logger.warning(f"children received in add_children fastapi method {children}")
     try:
         return crud.add_children(db=db, children=children, parent_id=parent_id)
     except Exception as e:
-        return {'message': f'Failed to execute query: {e}','data': ''}
+        return {"message": f"Failed to execute query: {e}", "data": ""}
 
 
 @app.post("/groups/")
@@ -71,16 +73,16 @@ async def add_group(users: List[schemas.User], group_name: str, ticket_id: int, 
     try:
         return crud.add_group(db=db, users=users, group_name=group_name, ticket_id=ticket_id)
     except Exception as e:
-        return {'message': f'Failed to execute query: {e}', 'data': ''}
+        return {"message": f"Failed to execute query: {e}", "data": ""}
 
 
 @app.put("/users/")
 async def update_user(user: schemas.UserBase, db: Session = Depends(get_db)) -> int | Dict[str, str]:
-    logger.warning(f'data received by fast api update_user {user}')
+    logger.warning(f"data received by fast api update_user {user}")
     try:
         return crud.update_user(db=db, user=user).id
     except Exception as e:
-        return {'message': f'Failed to execute query: {e}', 'data': ''}
+        return {"message": f"Failed to execute query: {e}", "data": ""}
 
 
 if __name__ == "__main__":
