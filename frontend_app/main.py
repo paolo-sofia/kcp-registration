@@ -3,7 +3,7 @@ import logging
 import time
 from enum import StrEnum
 from hashlib import sha256
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import pendulum
 import qrcode
@@ -54,28 +54,38 @@ def decodifica_codice_fiscale(cod_fiscale: str) -> Dict[str, Any]:
 
 
 def regolamento_associativo_popup() -> bool:
-    regolamento_associativo = """This is the privacy policy text.
-    Please read the entire content carefully before proceeding.
-    By clicking 'Accept', you acknowledge that you have read and understood the policy.
-       """
+    regolamento_associativo = f"""Il/La sottoscritto/a
+- dichara di aver letto e compreso in ogni dettaglio il regolamento associativo {pendulum.now(DEFAULT_TIMEZONE).year} per le predette attività, predisposto dalla stessa asd motorart
+- di aver compreso che i soci ordinari rispondono in prima persona delle azioni compiute all'interno degli spazi associativi ed in particolare nell'utilizzo dei kart/moto/mini-moto e che gli istruttori sportivi rispondono nei limiti di quanto previsto dal regolamento associativo {pendulum.now(DEFAULT_TIMEZONE).year} ovvero per quanto direttamente connesso alle direttive impartite secondo la corretta disciplina sportiva.
+- chiede di utilizzare la copertura assicurativa base (così indicata nella polizza assicurativa dell'asd visionata insieme al regolamento associativo) versando per la quota associativa la somma di €__
+- chiede di utilizzare la copertura assicurativa integrativa (che prevede l'abbattimento delle franchigie e l'innalzamento dei rimborsi così come indicato nella polizza assicurativa dell'asd visionata insieme al regolamento associativo) versando la somma integrativa di € __
+- il sottoscritto allega alla sottoscritta il certificato di idionetá alla pratica sportiva non agonistica
+- il sottoscritto dichiara sotto la propria responsabilitá (consapevole delle conseguenze civili/penali delle dichiarazioni mendaci) di possedere il certificato - si impegna all'invio telematico.
+- chiede di essere informato via mail/sms/whatsapp e altri mezzi di comunicazione sulle attività dell'associazione
+"""
 
-    st.text_area(
-        label="Regolamento Associativo ASD Motorart",
-        key="regolamento associativo_text_area",
-        value=regolamento_associativo,
-        disabled=True,
-    )
-    return st.checkbox(label="Ho letto ed accetto il Regolamento associativo")
+    with st.expander("Dichiarazione di responsabilita'", expanded=False):
+        st.markdown(regolamento_associativo)
+        return st.checkbox(label="Ho letto ed accetto il Regolamento associativo")
 
 
 def privacy_policy_popup() -> bool:
-    privacy_policy = """This is the privacy policy text.
-Please read the entire content carefully before proceeding.
-By clicking 'Accept', you acknowledge that you have read and understood the policy.
+    privacy_policy = """INFORMATIVA ex art. 13 del REGOLAMENTO (UE) 2016/679
+Gentile Signore/a, gentile socio/a, GENTILE GENITORE DEL/LA MINORENNE desideriamo informarLa, in qualità di Titolari del trattamento, che il Regolamento UE/2016/679 Generai Data Protection Regulation (G.D.P.R.), di immediata applicazione anche in Italia, prevede la tutela delle persone e di altri soggetti rispetto al trattamento dei dati personali. Secondo la normativa indicata, tale trattamento sarà improntato ai principi di correttezza, liceità, trasparenza e tutela della Sua riservatezza e dei Suoi diritti. Ai sensi dell'articolo 13 del G.D.P.R., pertanto, Le fornisco le seguenti informazioni:
+1. I dati personali anagrafici e di recapiti, da Lei forniti verranno trattati per le seguenti finalità basate sul Suo consenso e sul legittimo interesse della scrivente ASD: inserimento nel libro dei soci e tesseramento ASC ed ogni altro utilizzo attinente ai suddetti rapporti associativi e di tesseramento sportivo. 2. Base giuridica di tale operazione sono l'art. 36 del C.C., la normativa fiscale relativa agli enti non commerciali, in particolare l'art. 148 del T.U.I.R., l'art. 4 del D.P.R. 633/72 e l'art. 90 della Legge 289/2002, nonché le norme del CONI e dell'A.S.C. relative al tesseramento e alla partecipazione alle attività organizzate da tali enti o con la loro partecipazione. 3. I legittimi interessi del titolare del trattamento perseguiti con tale attività sono una chiara e corretta applicazione delle disposizioni statutarie sull'ordinamento interno e l'amministrazione dell'associazione, la possibilità di usufruire delle agevolazioni fiscali spettanti all'associazione, la possibilità di partecipare alle attività organizzate dagli enti citati al precedente punto l. 4. Il trattamento sarà effettuato con le seguenti modalità: su schede manuali, realizzate anche con l'ausilio di mezzi elettronici, conservate in luoghi chiusi, la cui chiave è detenuta dal Presidente e dagli incaricati dell' amministrazione, ovvero in maniera informatizzata, su un PC detenuto esclusivamente dal Presidente dell'associazione che è attrezzato adeguatamente contro i rischi infornatici (firewall, antivirus, backup periodico dei dati); autorizzati ad accedere a tali dati sono il presidente e gli incaricati da quest'ultimo ai fini dell'amministrazione. Ai sensi dell'art.4 n. 2del G.D.P.R, il trattamento dei dati personali potrà consistere nella raccolta, registrazione, organizzazione, consultazione, elaborazione, modificazione, selezione, estrazione, raffronto, utilizzo, interconnessione, blocco, comunicazione, cancellazione e distruzione dei dati. 5. I dati personali saranno conservati per tutto il tempo indispensabile a una corretta tenuta del libro dei soci e/o per procedere alle formalità richieste dalle Federazioni Sportive e/o gli Enti di Promozione Sportiva cui siamo affiliati: tale termine è determinato dal codice civile, dalla normativa fiscale e dalle norme e regolamenti del CONI e del l'A.S.C. cui siamo affiliati. La verifica sulla obsolescenza dei dati oggetto di trattamento rispetto alle finalità perle quali sono stati raccolti e trattati viene effettuata periodicamente.
+6. Il conferimento dei dati è obbligatorio per il raggiungimento delle finalità dello statuto dell'Associazione ed è quindi indispensabile per consentirci di accogliere la sua domanda di ammissione a socio e/o per il tesseramento presso i soggetti indicati al punto precedente; l'eventuale rifiuto a fornirli comporta l'impossibilità di accogliere la Sua domanda di iscrizione e/o tesseramento, non essendo in tale ipotesi possibile instaurare l'indicato rapporto associativo e/o di tesseramento presso gli enti cui l'Associazione è affiliata. 7. I dati anagrafici potranno essere comunicati esclusivamente all'A.S.C..; tutti i dati non saranno comunicati ad altri soggetti, né saranno oggetto di diffusione. 8. Il trattamento non riguarderà dati personali rientranti nel novero dei dati "sensibili", vale a dire "i dati personali idonei a rivelare l'origine razziale ed etnica, le convinzioni religiose, filosofiche o di altro genere, le opinioni politiche, l'adesione a partiti, sindacati, associazioni od organizzazioni a carattere religioso, filosofico, politico o sindacale, nonché i dati personali idonei a rivelare lo stato di salute e la vita sessuale". I dati sanitari sono conservati a cura del medico incaricato degli accertamenti inerenti all'idoneità sportiva, medico che provvede in proprio al loro trattamento. 9. Il titolare del trattamento è ANDREA PALAZZO, legale rappresentante della ASD MOTORART con sede in c/da MONTADA, n° 18 - TRECCHINA (PZ), contattabile all' indirizzo mail: palazzo.and@gmail.com. IO. Il responsabile del trattamento è l'incaricato ANDREA PALAZZO contattabile all'indirizzo mail predetto. In ogni momento Lei potrà esercitare i Suoi diritti di conoscere i dati che La riguardano, sapere come sono stati acquisiti, verificare se sono esatti, completi, aggiornati e ben custoditi, di ricevere i dati in un formato strutturato, di uso comune e leggibile da dispositivo automatico, di revocare il consenso eventualmente prestato relativamente al trattamento dei Suoi dati in qualsiasi momento ed opporsi in tutto od in parte, all' utilizzo degli stessi come sanciti dagli artt. da 15 a 20 del G.D.P.R. Tali diritti possono essere esercitati attraverso specifica istanza da indirizzare tramite raccomandata - o PEC- al Titolare del trattamento. 11. Lei ha in diritto di revocare il consenso in qualsiasi momento senza pregiudicare la liceità del trattamento basata sul consenso prestato prima della revoca. Tale diritto potrà essere esercitato inviando la revoca del consenso all' indirizzo e-mail indicato nei precedenti punti.12. Lei ha il diritto di proporre reclamo al Garante per la protezione dei dati personali ovvero a alla diversa autorità di controllo che dovesse essere istituita dal Decreto previsto della Legge Comunitaria n.163/2017 13. Non esiste alcun processo decisionale automatizzato, né alcuna attività di profilazione di cui all'articolo 22, paragrafi I e 4 del G.D.P.R.
+Il/La sottoscritto/a autorizza nel contempo il trattamento dei dati inseriti nella presente comunicazione e modulistica.
    """
+    with st.expander("Consenso al trattamento dei dati", expanded=False):
+        st.markdown(privacy_policy)
+        return st.checkbox("Ho letto ed accetto la Privacy Policy")
 
-    st.text_area("Consenso del trattamento dei dati", privacy_policy, key="privacy_policy_text_area", disabled=True)
-    return st.checkbox("Ho letto ed accetto la Privacy Policy")
+
+def show_regolamento_associativo() -> None:
+    regolamento_associativo = """Il fatto fu di sera, e la luna non luceva
+    """
+    with st.expander("Leggi il regolamento associativo", expanded=False):
+        st.write(regolamento_associativo)
 
 
 def generate_and_show_qr_code(user: Dict[str, Any]) -> None:
@@ -238,6 +248,8 @@ def registration_form(user_to_renew: schemas.User = None):
 
     # with st.form('registration_form'):
     today: pendulum.date = pendulum.today().date()
+
+    show_regolamento_associativo()
 
     fiscal_code = st.text_input(
         label="Codice Fiscale :red[*]",
@@ -406,8 +418,13 @@ def handle_registered_user(response: Dict[str, Any]) -> Optional[schemas.User]:
         st.error("Utente non registrato, registrati usando il form")
         return None
 
-    if check_if_user_needs_renew(response.get(FormName.DATA_REGISTRAZIONE), response.get(FormName.DATA_NASCITA)):
+    default_renew, minor_renew = check_if_user_needs_renew(response.get(FormName.DATA_REGISTRAZIONE),
+                                                           response.get(FormName.DATA_NASCITA))
+    if default_renew:
         st.warning("Hai effettuato la registrazione più di un anno fa, ricompila il modulo per favore")
+        return schemas.User(**response)
+    elif minor_renew:
+        st.warning("Quando hai effettuato la registrazione eri minorenne, ricompila il modulo per favore")
         return schemas.User(**response)
 
     st.success("Sei già registrato, grazie e buon divertimento")
@@ -415,7 +432,6 @@ def handle_registered_user(response: Dict[str, Any]) -> Optional[schemas.User]:
 
 
 def already_registered_form() -> Optional[schemas.User]:
-    st.markdown("#### Inserisci nome e cognome")
     with st.form("already_registered_form"):
         fiscal_code: str = st.text_input("Codice Fiscale")
 
@@ -446,7 +462,7 @@ def check_if_minor_at_date(data_nascita: pendulum.datetime, other_date: pendulum
     return False
 
 
-def check_if_user_needs_renew(data_registrazione: str, data_nascita: str) -> bool:
+def check_if_user_needs_renew(data_registrazione: str, data_nascita: str) -> Tuple[bool, bool]:
     data_registrazione: pendulum.datetime = pendulum.from_format(data_registrazione, "YYYY-MM-DD", tz=DEFAULT_TIMEZONE)
     data_nascita: pendulum.datetime = pendulum.from_format(data_nascita, "YYYY-MM-DD", tz=DEFAULT_TIMEZONE)
 
@@ -454,19 +470,25 @@ def check_if_user_needs_renew(data_registrazione: str, data_nascita: str) -> boo
     is_minor_at_date: bool = check_if_minor_at_date(data_nascita, data_registrazione)
     is_minor_today: bool = check_if_minor_at_date(data_nascita, pendulum.today(tz=DEFAULT_TIMEZONE))
 
-    return is_default_renew or (is_minor_at_date and not is_minor_today)
+    return is_default_renew, is_minor_at_date and not is_minor_today
 
 
 def main():
-    st.title("User Registration")
+    st.title("KCP - Registrazione utente")
+    st.markdown("""
+##### Benvenuto al kart circuit Palazzo
+Per poter continuare devi compilare il modulo di registrazione.
+- Se sei gia' stato qui', inserisci nel [form seguente](#controllo-utente-registrato) il tuo codice fiscale per confermare che sei gia' registrato
+- Se non sei mai stato qui', devi compilare il [form in basso](#form-di-registrazione). Se sei un genitore, inserisci i tuoi dati nel form, mentre nella parte [Sezione genitori](#sezione-genitori), inserisci i dati dei figli che devono fare il giro sui kart
+    """)
 
-    st.markdown("### Sei già registrato? Inserisci qui il tuo codice fiscale")
+    st.markdown("#### Controllo utente registrato")
     user_to_renew = already_registered_form()
     if user_to_renew:
         st.session_state.renew = True
         update_user_data(user_to_renew.model_dump())
 
-    st.markdown("### Non sei registrato? Compila il form di registrazione")
+    st.markdown("### Form di registrazione")
     registration_form(user_to_renew=user_to_renew)
 
 
