@@ -1,21 +1,22 @@
+import enum
 from datetime import datetime
 
 import pendulum
-from sqlalchemy import (
-    Column,
-    Date,
-    DateTime,
-    ForeignKey,
-    Index,
-    Integer,
-    String,
-)
+from sqlalchemy import Column, Date, DateTime, Enum, ForeignKey, Index, Integer, String
 from sqlalchemy.orm import relationship
 
 from database.database import Base
 
 DEFAULT_TIMEZONE: str = "Europe/Rome"
 
+class UserTypeEnum(enum.Enum):
+    socio = 'socio'
+    tesserato = 'tesserato'
+
+class UserActivityEnum(enum.Enum):
+    kart = 'kart'
+    moto = 'moto'
+    altro = 'altro'
 
 class User(Base):
     __tablename__ = "users"
@@ -33,6 +34,8 @@ class User(Base):
     via_residenza: Column = Column(String(100), nullable=True)
     codice_fiscale: Column = Column(String(16), index=True, nullable=False)
     telefono: Column = Column(String(30), nullable=True)
+    tipo_utente: Column = Column(Enum(UserTypeEnum), nullable=True, default=UserTypeEnum.tesserato.value)
+    attivita: Column = Column(Enum(UserActivityEnum), nullable=True, default=UserActivityEnum.kart.value)
     data_registrazione: Column = Column(Date, default=datetime.today, nullable=False)
 
     utente_gruppo_fk = relationship("UserGroup", back_populates="utente_gruppo")

@@ -38,6 +38,8 @@ class FormName(StrEnum):
     DATA_REGISTRAZIONE = "data_registrazione"
     REGOLAMENTO_ASSOCIATIVO = "regolamento_associativo"
     PRIVACY_POLICY = "privacy_policy"
+    TIPO_UTENTE = "tipo_utente"
+    ATTIVITA_UTENTE = 'attivita_utente'
 
 
 def decodifica_codice_fiscale(cod_fiscale: str) -> Dict[str, Any]:
@@ -150,7 +152,7 @@ def add_child() -> List[Dict[str, str]]:
     child_min_date: pendulum.date = today.subtract(years=18).add(days=1).date()
     child_max_date: pendulum.date = today.subtract(years=6).date()
 
-    st.subheader("Sezione Genitori")
+    st.subheader("Sezione Genitori", divider='red')
     accept_child: bool = st.checkbox(
         label="Dichiaro di esercitare la potestà genitoriale sul/i minorenne/i registrato in quanto padre o madre dello stesso"
               " (Consapevole delle conseguenze civili e penali delle dichiarazioni mendaci)")
@@ -159,7 +161,7 @@ def add_child() -> List[Dict[str, str]]:
 
     children: List[Dict[str, str]] = []
     for i in range(num_child):
-        st.subheader(f"Dati Figlio {i + 1}")
+        st.subheader(f"Dati Figlio/a {i + 1}", divider='red')
 
         child_name = st.text_input(
             label="Nome :red[*]",
@@ -172,19 +174,41 @@ def add_child() -> List[Dict[str, str]]:
             disabled=not accept_child,
         )
         child_codice_fiscale = st.text_input(
-            label="Codice fiscale figlio :red[*]",
+            label="Codice fiscale figlio/a :red[*]",
             max_chars=16,
             key=f"cod_fiscale_figlio_{i}",
             disabled=not accept_child,
         )
 
+        data_nascita_figlio = st.date_input(
+            label="Data di Nascita :red[*]",
+            disabled=not accept_child,
+            min_value=child_min_date,
+            max_value=child_max_date,
+            value=child_min_date,
+            key=f"data_nascita_figlio_{i}")
+
+        child_type: str = st.radio(
+            label='Tipologia ammissione figlio/a',
+            options=['Tesserato/a', 'Socio/a'],
+            index=0,
+            key='child_type'
+        )
+
+        child_activity: str = st.radio(
+            label='Tipologia attivita figlio/a',
+            options=['Kart non agonistico', 'Motociclismo non agonistico',
+                     'Frequentazione spazi associativi a scopo ludico/ricreativo (Non sportivo)'],
+            key='child_activity'
+        )
+
         children.append({
             str(FormName.NOME): " ".join([x.capitalize() for x in child_name.split()]),
             str(FormName.COGNOME): " ".join([x.capitalize() for x in child_surname.split()]),
-            str(FormName.DATA_NASCITA): str(st.date_input("Data di Nascita :red[*]", disabled=not accept_child,
-                                                          min_value=child_min_date, max_value=child_max_date,
-                                                          value=child_min_date, key=f"data_nascita_figlio_{i}")),
+            str(FormName.DATA_NASCITA): str(data_nascita_figlio),
             str(FormName.CODICE_FISCALE): child_codice_fiscale.upper(),
+            str(FormName.TIPO_UTENTE): child_type,
+            str(FormName.ATTIVITA_UTENTE): child_activity
         })
 
     return children
@@ -248,127 +272,147 @@ def registration_form(user_to_renew: schemas.User = None):
 
     # with st.form('registration_form'):
     today: pendulum.date = pendulum.today().date()
+    with st.container():
+        show_regolamento_associativo()
 
-    show_regolamento_associativo()
-
-    fiscal_code = st.text_input(
-        label="Codice Fiscale :red[*]",
-        max_chars=16,
-        disabled=st.session_state.renew,
-        value=default_values[FormName.CODICE_FISCALE],
-    )
-
-    if fiscal_code:
-        decoded_cod_fiscale: Dict[str, Any] = decodifica_codice_fiscale(fiscal_code)
-        birth_place = st.text_input(
-            label="Luogo di Nascita :red[*]",
-            value=decoded_cod_fiscale.get(FormName.LUOGO_NASCITA, ""),
+        fiscal_code = st.text_input(
+            label="Codice Fiscale :red[*]",
+            max_chars=16,
             disabled=st.session_state.renew,
-        )
-        birth_date = st.date_input(
-            label="Data di Nascita :red[*]",
-            value=decoded_cod_fiscale.get(FormName.DATA_NASCITA,
-                                          pendulum.datetime(1970, 1, 1, tz=DEFAULT_TIMEZONE)).date(),
-            min_value=today.replace(year=today.year - 100),
-            max_value=today.replace(year=today.year - 18),
-            disabled=st.session_state.renew,
-        )
-    else:
-        birth_place = st.text_input(
-            label="Luogo di Nascita :red[*]",
-            disabled=st.session_state.renew,
-            value=default_values[FormName.LUOGO_NASCITA],
-        )
-        birth_date = st.date_input(
-            label="Data di Nascita :red[*]",
-            value=default_values[FormName.DATA_NASCITA],
-            min_value=today.replace(year=today.year - 100),
-            max_value=today.replace(year=today.year - 18),
-            disabled=st.session_state.renew,
+            value=default_values[FormName.CODICE_FISCALE],
         )
 
-    name = st.text_input(
-        label="Nome :red[*]",
-        disabled=st.session_state.renew,
-        value=default_values[FormName.NOME],
-    )
-    surname = st.text_input(
-        label="Cognome :red[*]",
-        disabled=st.session_state.renew,
-        value=default_values[FormName.COGNOME],
-    )
-    residence_place = st.text_input(
-        label="Luogo di Residenza :red[*]",
-        disabled=False,
-        value=default_values[FormName.LUOGO_RESIDENZA],
-    )
-    residence_street = st.text_input(
-        label="Via di Residenza :red[*]",
-        disabled=False,
-        value=default_values[FormName.VIA_RESIDENZA],
-    )
-    phone_number = st.text_input(
-        label="Numero di telefono",
-        disabled=False,
-        value=default_values[FormName.TELEFONO],
-    )
+        if fiscal_code:
+            decoded_cod_fiscale: Dict[str, Any] = decodifica_codice_fiscale(fiscal_code)
+            birth_place = st.text_input(
+                label="Luogo di Nascita :red[*]",
+                value=decoded_cod_fiscale.get(FormName.LUOGO_NASCITA, ""),
+                disabled=st.session_state.renew,
+            )
+            birth_date = st.date_input(
+                label="Data di Nascita :red[*]",
+                value=decoded_cod_fiscale.get(FormName.DATA_NASCITA,
+                                              pendulum.datetime(1970, 1, 1, tz=DEFAULT_TIMEZONE)).date(),
+                min_value=today.replace(year=today.year - 100),
+                max_value=today.replace(year=today.year - 18),
+                disabled=st.session_state.renew,
+            )
+        else:
+            birth_place = st.text_input(
+                label="Luogo di Nascita :red[*]",
+                disabled=st.session_state.renew,
+                value=default_values[FormName.LUOGO_NASCITA],
+            )
+            birth_date = st.date_input(
+                label="Data di Nascita :red[*]",
+                value=default_values[FormName.DATA_NASCITA],
+                min_value=today.replace(year=today.year - 100),
+                max_value=today.replace(year=today.year - 18),
+                disabled=st.session_state.renew,
+            )
 
-    regolamento_associativo: bool = regolamento_associativo_popup()
-    privacy_policy: bool = privacy_policy_popup()
+        name = st.text_input(
+            label="Nome :red[*]",
+            disabled=st.session_state.renew,
+            value=default_values[FormName.NOME],
+        )
+        surname = st.text_input(
+            label="Cognome :red[*]",
+            disabled=st.session_state.renew,
+            value=default_values[FormName.COGNOME],
+        )
+        residence_place = st.text_input(
+            label="Luogo di Residenza :red[*]",
+            disabled=False,
+            value=default_values[FormName.LUOGO_RESIDENZA],
+        )
+        residence_street = st.text_input(
+            label="Via di Residenza :red[*]",
+            disabled=False,
+            value=default_values[FormName.VIA_RESIDENZA],
+        )
+        phone_number = st.text_input(
+            label="Numero di telefono",
+            disabled=False,
+            value=default_values[FormName.TELEFONO],
+        )
 
-    children: List[Dict[str, str]] = add_child()
+        user_type: str = st.radio(
+            label='Tipologia ammissione',
+            options=['Tesserato/a', 'Socio/a'],
+            index=0,
+        )
 
-    user_data = {
-        str(FormName.CODICE_FISCALE): fiscal_code.upper(),
-        str(FormName.NOME): " ".join([x.capitalize() for x in name.split()]),
-        str(FormName.COGNOME): " ".join([x.capitalize() for x in surname.split()]),
-        str(FormName.DATA_NASCITA): str(birth_date),
-        str(FormName.LUOGO_NASCITA): " ".join([x.capitalize() for x in birth_place.split()]),
-        str(FormName.LUOGO_RESIDENZA): " ".join([x.capitalize() for x in residence_place.split()]),
-        str(FormName.VIA_RESIDENZA): " ".join([x.capitalize() for x in residence_street.split()]),
-        str(FormName.TELEFONO): phone_number,
-    }
-    update_user_data(user_data)
+        user_activity: str = st.radio(
+            label='Tipologia ammissione',
+            options=['Kart non agonistico', 'Motociclismo non agonistico', 'Frequentazione spazi associativi a scopo ludico/ricreativo (Non sportivo)']
+        )
 
-    data_validated: bool = validate_data(user_data) and validate_children(children) and regolamento_associativo \
-                           and privacy_policy
 
-    _, _, col, _, _ = st.columns(5)
+        regolamento_associativo: bool = regolamento_associativo_popup()
+        privacy_policy: bool = privacy_policy_popup()
 
-    with col:
-        register_button = st.button("Firma", disabled=not data_validated)
+        children: List[Dict[str, str]] = add_child()
 
-    if not register_button or not privacy_policy or not regolamento_associativo:
-        return
+        user_data = {
+            str(FormName.CODICE_FISCALE): fiscal_code.upper(),
+            str(FormName.NOME): " ".join([x.capitalize() for x in name.split()]),
+            str(FormName.COGNOME): " ".join([x.capitalize() for x in surname.split()]),
+            str(FormName.DATA_NASCITA): str(birth_date),
+            str(FormName.LUOGO_NASCITA): " ".join([x.capitalize() for x in birth_place.split()]),
+            str(FormName.LUOGO_RESIDENZA): " ".join([x.capitalize() for x in residence_place.split()]),
+            str(FormName.VIA_RESIDENZA): " ".join([x.capitalize() for x in residence_street.split()]),
+            str(FormName.TELEFONO): phone_number,
+            str(FormName.TIPO_UTENTE): user_type,
+            str(FormName.ATTIVITA_UTENTE): user_activity,
+        }
+        update_user_data(user_data)
 
-    if st.session_state.renew:
-        parent_id: Optional[int] = renew_user(user_data)
-    else:
-        parent_id: Optional[int] = save_user_to_db(user_data)
-    if not parent_id:
-        return
+        data_validated: bool = validate_data(user_data) and validate_children(children) and regolamento_associativo \
+                               and privacy_policy
 
-    st.write(f"parent_id {parent_id}")
-    st.write(f"Children {children}")
-    if not children:
+        register_button = st.columns(5)[2].button(
+            label="Firma",
+            disabled=not data_validated,
+            type='primary',
+            use_container_width=True
+        )
+
+        if not register_button or not privacy_policy or not regolamento_associativo:
+            return
+
+        if st.session_state.renew:
+            parent_id: Optional[int] = renew_user(user_data)
+        else:
+            parent_id: Optional[int] = save_user_to_db(user_data)
+        if not parent_id:
+            return
+
+
+        st.write(f"parent_id {parent_id}")
+        st.write(f"Children {children}")
+        if not children:
+            clear_session_state()
+            time.sleep(2)
+            st.experimental_rerun()
+            return
+
+        children_ids: List[int] = save_children_to_db(children, parent_id)
+        if not children_ids:
+            st.write("error saving children")
+            if not remove_children_from_db(children_ids):
+                st.write("error removing children")
+                return
+            return
+
+        st.write(f"Before clearing session\n{st.session_state}")
         clear_session_state()
+        st.write(f"After clearing session\n{st.session_state}")
         time.sleep(2)
         st.experimental_rerun()
-        return
 
-    children_ids: List[int] = save_children_to_db(children, parent_id)
-    if not children_ids:
-        st.write("error saving children")
-        if not remove_children_from_db(children_ids):
-            st.write("error removing children")
-            return
-        return
 
-    st.write(f"Before clearing session\n{st.session_state}")
-    clear_session_state()
-    st.write(f"After clearing session\n{st.session_state}")
-    time.sleep(2)
-    st.experimental_rerun()
+
 
 
 def remove_children_from_db(children_id: List[int]) -> bool:
@@ -433,9 +477,9 @@ def handle_registered_user(response: Dict[str, Any]) -> Optional[schemas.User]:
 
 def already_registered_form() -> Optional[schemas.User]:
     with st.form("already_registered_form"):
+        st.markdown("#### Controllo utente registrato")
         fiscal_code: str = st.text_input("Codice Fiscale")
-
-        if not st.form_submit_button("Cerca", use_container_width=True):
+        if not st.columns(5)[2].form_submit_button("Cerca", use_container_width=True, type='secondary'):
             return None
 
         try:
@@ -473,23 +517,60 @@ def check_if_user_needs_renew(data_registrazione: str, data_nascita: str) -> Tup
     return is_default_renew, is_minor_at_date and not is_minor_today
 
 
-def main():
-    st.title("KCP - Registrazione utente")
+def prettify_link(link: str, text: str) -> str:
+    # return f'<a href="#controllo-utente-registrato" style="color : #fb2029;"> form seguente</a>'
+    return f'<a href="{link}" style="color : #fb2029;"> {text}</a>'
+
+
+def social_media_icons():
     st.markdown("""
+    <div style="position: fixed; bottom: 0; left: 0; width: 100%;  text-align: center; padding: 10px;">
+        <a href="https://twitter.com/" target="_blank"><img width="40" height="40" src="https://img.icons8.com/ios-filled/50/000000/twitterx--v1.png" alt="twitterx--v1"/></a>
+        <a href="https://instagram.com/" target="_blank"><img width="40" height="40" src="https://img.icons8.com/office/50/instagram-new.png" alt="instagram-new"/></a>
+        <a href="" target="_blank"><img width="40" height="40" src="https://img.icons8.com/color/40/facebook-new.png" alt="facebook-new"/></a>
+        <a href="https://tiktok.com/" target="_blank"><img width="40" height="40" src="https://img.icons8.com/ios-filled/50/tiktok--v1.png" alt="tiktok--v1"/></a>
+        <a href="https://github.com/paolo-sofia/kcp-registration" target="_blank"><img width="40" height="40" src="https://img.icons8.com/metro/26/github.png" alt="github"/></a>
+    </div>
+    """, unsafe_allow_html=True)
+
+def main():
+    st.set_page_config(
+        page_title="KCP Registrazione",
+        page_icon="frontend_app/data/img/kcp_logo_small.png",
+        layout="centered",
+        initial_sidebar_state="expanded",
+        menu_items={
+            'Get Help'    : 'https://kartodromopalazzo.it/',
+            'Report a bug': "https://github.com/paolo-sofia/kcp-registration/issues",
+            'About'       : "# This is a header. This is an *extremely* cool app!"
+        }
+    )
+    with st.columns(3)[1]:
+        st.image(
+            image="frontend_app/data/img/kcp_logo_small.png",
+            use_column_width='auto',
+            width=250
+        )
+    st.title("KCP - Registrazione utente")
+
+    st.markdown(f"""
 ##### Benvenuto al kart circuit Palazzo
 Per poter continuare devi compilare il modulo di registrazione.
-- Se sei gia' stato qui', inserisci nel [form seguente](#controllo-utente-registrato) il tuo codice fiscale per confermare che sei gia' registrato
-- Se non sei mai stato qui', devi compilare il [form in basso](#form-di-registrazione). Se sei un genitore, inserisci i tuoi dati nel form, mentre nella parte [Sezione genitori](#sezione-genitori), inserisci i dati dei figli che devono fare il giro sui kart
-    """)
+- Se sei gia' stato qui', inserisci nel {prettify_link('#controllo-utente-registrato', 'form seguente')} il tuo codice fiscale per confermare che sei gia' registrato
+- Se non sei mai stato qui', devi compilare il {prettify_link('#form-di-registrazione', 'form in basso')}. Se sei un genitore, inserisci i tuoi dati nel form, mentre nella parte {prettify_link('#sezione-genitori', 'Sezione genitori')}, inserisci i dati dei figli che devono fare il giro sui kart
+    """, unsafe_allow_html=True)
 
-    st.markdown("#### Controllo utente registrato")
+
     user_to_renew = already_registered_form()
     if user_to_renew:
         st.session_state.renew = True
         update_user_data(user_to_renew.model_dump())
 
-    st.markdown("### Form di registrazione")
+    st.subheader("Form di registrazione", divider='red')
     registration_form(user_to_renew=user_to_renew)
+
+    st.markdown('---')
+    social_media_icons()
 
 
 if __name__ == "__main__":

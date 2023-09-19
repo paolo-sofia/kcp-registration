@@ -14,6 +14,8 @@ class UserBase(BaseModel):
     luogo_residenza: Optional[str] = ''
     via_residenza: Optional[str] = ''
     telefono: Optional[str] = ''
+    tipo_utente: Optional[str] = ''
+    attivita_utente: Optional[str] = ''
 
 class UserCreate(UserBase):
     pass
