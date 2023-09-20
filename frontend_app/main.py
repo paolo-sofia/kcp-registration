@@ -155,18 +155,23 @@ def validate_data(user_data: Dict[str, Any]) -> bool:
 
 
 def validate_child(child: Dict[str, str], child_min_date: pendulum.Date) -> bool:
+    st.error(f"child min date {child_min_date} {type(child_min_date)}")
     default_date: str = pendulum.today().date().strftime("%Y-%m-%d")
+    st.error(f"child date {child.get(FormName.DATA_NASCITA, default_date)}")
+    data_nascita: pendulum.date = pendulum.from_format(child.get(FormName.DATA_NASCITA, default_date), "YYYY-MM-DD",
+                                                       tz="Europe/Rome").date()
+    st.error(f"computed date {data_nascita} {type(data_nascita)}")
+
     return bool(
         child.get(FormName.NOME, "")
         and child.get(FormName.COGNOME, "")
-        and pendulum.from_format(child.get(FormName.DATA_NASCITA, default_date), "YYYY-MM-DD",
-                                 tz="Europe/Rome").date() > child_min_date
+        and data_nascita > child_min_date
         and codicefiscale.is_valid(child.get(FormName.CODICE_FISCALE, "")),
     )
 
 
 def validate_children(children: List[Dict[str, str]]) -> bool:
-    child_min_date: pendulum.Date = pendulum.today(DEFAULT_TIMEZONE).today().subtract(years=18).add(days=1)
+    child_min_date: pendulum.Date = pendulum.today(DEFAULT_TIMEZONE).subtract(years=18).add(days=1).date()
 
     return all(validate_child(child, child_min_date) for child in children)
 
@@ -381,7 +386,6 @@ def registration_form(user_to_renew: schemas.User = None):
             format_func=activity_cols.get,
             index=0,
         )
-        st.success(f"user activity {user_activity}")
 
         regolamento_associativo: bool = regolamento_associativo_popup()
         privacy_policy: bool = privacy_policy_popup()
@@ -422,8 +426,6 @@ def registration_form(user_to_renew: schemas.User = None):
         if not parent_id:
             return
 
-        st.write(f"parent_id {parent_id}")
-        st.write(f"Children {children}")
         if not children:
             clear_session_state()
             time.sleep(2)
@@ -438,9 +440,7 @@ def registration_form(user_to_renew: schemas.User = None):
                 return
             return
 
-        st.write(f"Before clearing session\n{st.session_state}")
         clear_session_state()
-        st.write(f"After clearing session\n{st.session_state}")
         time.sleep(2)
         st.experimental_rerun()
 
@@ -474,8 +474,6 @@ def save_user_to_db(user_data: Dict[str, str]) -> Optional[int]:
 
 
 def renew_user(user_data: Dict[str, str]) -> Optional[int]:
-    st.write(user_data)
-
     response = requests.put(f"{API_BASE_URL}/users/", json=user_data)
     if response.status_code == 200:
         st.success("Utente aggiornato correttamente!")
@@ -512,7 +510,6 @@ def already_registered_form() -> Optional[schemas.User]:
 
         try:
             response = requests.get(f"{API_BASE_URL}/users/{fiscal_code.upper()}", headers=HEADERS)
-            st.write(response.json())
             if response.status_code == 200:
                 return handle_registered_user(response.json())
             else:

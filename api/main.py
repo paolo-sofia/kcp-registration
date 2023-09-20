@@ -60,7 +60,6 @@ async def remove_children(children_id: List[int], db: Session = Depends(get_db))
 @app.post("/childrens/{parent_id}")
 async def add_children(parent_id: int, children: List[schemas.UserCreate], db: Session = Depends(get_db)) -> \
         Dict[str, str] | List[int]:
-    logger.warning(f"children received in add_children fastapi method {children}")
     try:
         return crud.add_children(db=db, children=children, parent_id=parent_id)
     except Exception as e:

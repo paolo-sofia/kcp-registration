@@ -58,9 +58,7 @@ def add_children(db: Session, children: List[schemas.UserCreate], parent_id: int
     children_ids: List[int] = []
 
     for child in children:
-        logger.warning(f"child {child}")
         db_child = get_user_by_codice_fiscale(db, child.codice_fiscale)
-        logger.warning(f"child query return {db_child}")
         if not db_child:
             db_child = models.User(**child.model_dump())
             db_child = add_object(db, db_child)
@@ -72,11 +70,8 @@ def add_children(db: Session, children: List[schemas.UserCreate], parent_id: int
             models.Child.id_figlio.name: db_child.id,
             models.Child.id_genitore.name: parent_id,
         })
-        logger.warning(f"Child model {child_user}")
         add_object(db, child_user)
-        logger.warning("Parent-Child relationship added")
 
-    logger.warning(f"Returning children {children_ids}")
     return children_ids
 
 
