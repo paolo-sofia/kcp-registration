@@ -84,7 +84,25 @@ Il/La sottoscritto/a autorizza nel contempo il trattamento dei dati inseriti nel
 
 
 def show_regolamento_associativo() -> None:
-    regolamento_associativo = """Il fatto fu di sera, e la luna non luceva
+    regolamento_associativo = """
+1. L’accesso agli spazi associativi (pista di kart/moto, paddock etc...) è consentito esclusivamente ai soci in regola con il tesseramento per anno 2022, previa ammissione da parte del Direttivo e a suo insindacabile giudizio;
+2. Prima e dopo il predetto tesseramento è possibile un periodo di training per (l’utilizzo dei veicoli mediante professionisti convenzionati con |'ASD allo scopo di apprendere la guida sicura all'interno del circuito. Tali professionisti applicheranno il loro codice deontologiche e le loro tariffe. La responsabilità professionale di tali sessioni di apprendimento ricade sul professionista e sull'allievo in base alla normativa vigente;
+3. I soci e gli allievi delle sessioni di apprendimento seguono le indicazioni in materia di sicurezza e di ordine negli spazi associativi, in particolare della pista di Go-Kart, del Presidente e del Direttivo: coloro i quali non si attengano alle indicazioni predette possono essere inibiti dall'utilizzo delle attrezzature con effetto immediato e, ricorrendo le condizioni previste dallo Statuto associativo dell'ASD, possono essere espulsi dalla stessa associazione.
+A) PISTA GO-KART
+1. Per l’accesso alla pista e per l’utilizzo dei veicoli è previsto il versamento di un contributo in base al tempo di utilizzo effettivo: tale contributo è volontario, in quanto il socio può decidere volontariamente se utilizzare o meno gli spazi associativi per quanto tempo decida lui stesso, ma a condizione di versare il contributo deciso dal Direttivo ed esposto nelle comunicazioni visibili all'ingresso degli spazi associativi;
+2. All'interno della pista e degli ambienti di utilizzo delle attrezzature del kartodromo il socio è tenuto a rispettare le REGOLE DI COMPORTAMENTO - in particolare:
+	- è vietato arrecare danno alle altre automobili mediante contatto
+	volontario o negligente
+	- è vietato guidare sotto l’effetto di alcool o droghe
+	- è obbligatorio utilizzare l’abbigliamento idoneo per la guida
+	- è vietato accedere ai box a velocità sostenuta e comunque superiore
+	a quella prevista dalla segnaletica accessoria
+	- è obbligatorio arrestare la propria guida nell'eventualità di FERMO
+	PISTA, ovvero di veicoli fermi per motivi tecnici o di sicurezza
+	- è vietato scendere dal proprio veicolo qualora dovesse arrestarsi
+	- è OBBLIGATORIO nella maniera più assoluta INDOSSARE IL CASCO
+	BEN ALLACCIATO
+	- IL MATERIALE E LE ATTREZZATURE PER L’UTILIZZO DEI KART DEVONO ESSERE RESTITUITI LADDOVE SIANO STATI PRELEVATI
     """
     with st.expander("Leggi il regolamento associativo", expanded=False):
         st.write(regolamento_associativo)
