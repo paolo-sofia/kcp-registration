@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 import sqlalchemy.engine
-import tomllib
+import tomli
 from sqlalchemy import (
     create_engine,
 )
@@ -9,7 +9,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 with open("data/secrets.toml", "rb") as f:
-    config = tomllib.load(f)["database"]
+    config = tomli.load(f)["database"]
 
 DATABASE_URL: str = f"postgresql://{config['user']}:{config['password']}@db:5432/{config['database']}"
 local_timezone: datetime.tzinfo = datetime.now(timezone.utc).astimezone().tzinfo

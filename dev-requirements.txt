@@ -10,3 +10,4 @@ python-codicefiscale==0.8.0
 qrcode==7.4.2
 psycopg2-binary==2.9.7
 pendulum==2.1.2
+tomli==2.0.1
