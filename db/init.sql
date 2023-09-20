@@ -1,1 +1,1 @@
-CREATE DATABASE asdmotorart;
+CREATE DATABASE placeholder_db;

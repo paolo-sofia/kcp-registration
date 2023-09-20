@@ -35,9 +35,9 @@ services:
       dockerfile: db/Dockerfile
       context: ./
     environment:
-      POSTGRES_USER: 'asd_motorart'
-      POSTGRES_PASSWORD: 'asd_motorart'
-      POSTGRES_DB: 'asdmotorart'
+      POSTGRES_USER: 'placeholder_user'
+      POSTGRES_PASSWORD: 'placeholder_pass'
+      POSTGRES_DB: 'placeholder_db'
     ports:
       - "5432:5432"
     volumes:
