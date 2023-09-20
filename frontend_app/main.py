@@ -23,6 +23,17 @@ HEADERS = {
 API_BASE_URL: str = "http://api:8000"
 DEFAULT_TIMEZONE: str = "Europe/Rome"
 
+activity_cols: Dict[str, str] = {
+    "kart": "Kart non agonistico",
+    "moto": "Motociclismo non agonistico",
+    "altro": "Frequentazione spazi associativi a scopo ludico/ricreativo (Non sportivo)",
+}
+
+tipo_utente_cols: Dict[str, str] = {
+    "socio": "Socio/a",
+    "tesserato": "Tesserato/a",
+}
+
 
 class FormName(StrEnum):
     NOME = "nome"
@@ -39,7 +50,7 @@ class FormName(StrEnum):
     REGOLAMENTO_ASSOCIATIVO = "regolamento_associativo"
     PRIVACY_POLICY = "privacy_policy"
     TIPO_UTENTE = "tipo_utente"
-    ATTIVITA_UTENTE = 'attivita_utente'
+    ATTIVITA = "attivita"
 
 
 def decodifica_codice_fiscale(cod_fiscale: str) -> Dict[str, Any]:
@@ -85,16 +96,16 @@ Il/La sottoscritto/a autorizza nel contempo il trattamento dei dati inseriti nel
 
 def show_regolamento_associativo() -> None:
     regolamento_associativo = """
-1. L’accesso agli spazi associativi (pista di kart/moto, paddock etc...) è consentito esclusivamente ai soci in regola con il tesseramento per anno 2022, previa ammissione da parte del Direttivo e a suo insindacabile giudizio;
-2. Prima e dopo il predetto tesseramento è possibile un periodo di training per (l’utilizzo dei veicoli mediante professionisti convenzionati con |'ASD allo scopo di apprendere la guida sicura all'interno del circuito. Tali professionisti applicheranno il loro codice deontologiche e le loro tariffe. La responsabilità professionale di tali sessioni di apprendimento ricade sul professionista e sull'allievo in base alla normativa vigente;
+1. L'accesso agli spazi associativi (pista di kart/moto, paddock etc...) è consentito esclusivamente ai soci in regola con il tesseramento per anno 2022, previa ammissione da parte del Direttivo e a suo insindacabile giudizio;
+2. Prima e dopo il predetto tesseramento è possibile un periodo di training per (l'utilizzo dei veicoli mediante professionisti convenzionati con |'ASD allo scopo di apprendere la guida sicura all'interno del circuito. Tali professionisti applicheranno il loro codice deontologiche e le loro tariffe. La responsabilità professionale di tali sessioni di apprendimento ricade sul professionista e sull'allievo in base alla normativa vigente;
 3. I soci e gli allievi delle sessioni di apprendimento seguono le indicazioni in materia di sicurezza e di ordine negli spazi associativi, in particolare della pista di Go-Kart, del Presidente e del Direttivo: coloro i quali non si attengano alle indicazioni predette possono essere inibiti dall'utilizzo delle attrezzature con effetto immediato e, ricorrendo le condizioni previste dallo Statuto associativo dell'ASD, possono essere espulsi dalla stessa associazione.
 A) PISTA GO-KART
-1. Per l’accesso alla pista e per l’utilizzo dei veicoli è previsto il versamento di un contributo in base al tempo di utilizzo effettivo: tale contributo è volontario, in quanto il socio può decidere volontariamente se utilizzare o meno gli spazi associativi per quanto tempo decida lui stesso, ma a condizione di versare il contributo deciso dal Direttivo ed esposto nelle comunicazioni visibili all'ingresso degli spazi associativi;
+1. Per l'accesso alla pista e per l'utilizzo dei veicoli è previsto il versamento di un contributo in base al tempo di utilizzo effettivo: tale contributo è volontario, in quanto il socio può decidere volontariamente se utilizzare o meno gli spazi associativi per quanto tempo decida lui stesso, ma a condizione di versare il contributo deciso dal Direttivo ed esposto nelle comunicazioni visibili all'ingresso degli spazi associativi;
 2. All'interno della pista e degli ambienti di utilizzo delle attrezzature del kartodromo il socio è tenuto a rispettare le REGOLE DI COMPORTAMENTO - in particolare:
 	- è vietato arrecare danno alle altre automobili mediante contatto
 	volontario o negligente
-	- è vietato guidare sotto l’effetto di alcool o droghe
-	- è obbligatorio utilizzare l’abbigliamento idoneo per la guida
+	- è vietato guidare sotto l'effetto di alcool o droghe
+	- è obbligatorio utilizzare l'abbigliamento idoneo per la guida
 	- è vietato accedere ai box a velocità sostenuta e comunque superiore
 	a quella prevista dalla segnaletica accessoria
 	- è obbligatorio arrestare la propria guida nell'eventualità di FERMO
@@ -102,7 +113,7 @@ A) PISTA GO-KART
 	- è vietato scendere dal proprio veicolo qualora dovesse arrestarsi
 	- è OBBLIGATORIO nella maniera più assoluta INDOSSARE IL CASCO
 	BEN ALLACCIATO
-	- IL MATERIALE E LE ATTREZZATURE PER L’UTILIZZO DEI KART DEVONO ESSERE RESTITUITI LADDOVE SIANO STATI PRELEVATI
+	- IL MATERIALE E LE ATTREZZATURE PER L'UTILIZZO DEI KART DEVONO ESSERE RESTITUITI LADDOVE SIANO STATI PRELEVATI
     """
     with st.expander("Leggi il regolamento associativo", expanded=False):
         st.write(regolamento_associativo)
@@ -170,7 +181,7 @@ def add_child() -> List[Dict[str, str]]:
     child_min_date: pendulum.date = today.subtract(years=18).add(days=1).date()
     child_max_date: pendulum.date = today.subtract(years=6).date()
 
-    st.subheader("Sezione Genitori", divider='red')
+    st.subheader("Sezione Genitori", divider="red")
     accept_child: bool = st.checkbox(
         label="Dichiaro di esercitare la potestà genitoriale sul/i minorenne/i registrato in quanto padre o madre dello stesso"
               " (Consapevole delle conseguenze civili e penali delle dichiarazioni mendaci)")
@@ -179,7 +190,7 @@ def add_child() -> List[Dict[str, str]]:
 
     children: List[Dict[str, str]] = []
     for i in range(num_child):
-        st.subheader(f"Dati Figlio/a {i + 1}", divider='red')
+        st.subheader(f"Dati Figlio/a {i + 1}", divider="red")
 
         child_name = st.text_input(
             label="Nome :red[*]",
@@ -207,17 +218,19 @@ def add_child() -> List[Dict[str, str]]:
             key=f"data_nascita_figlio_{i}")
 
         child_type: str = st.radio(
-            label='Tipologia ammissione figlio/a',
-            options=['Tesserato/a', 'Socio/a'],
+            label="Tipologia ammissione figlio/a",
+            options=["tesserato", "socio"],
             index=0,
-            key='child_type'
+            key="child_type",
+            format_func=tipo_utente_cols.get,
         )
 
         child_activity: str = st.radio(
-            label='Tipologia attivita figlio/a',
-            options=['Kart non agonistico', 'Motociclismo non agonistico',
-                     'Frequentazione spazi associativi a scopo ludico/ricreativo (Non sportivo)'],
-            key='child_activity'
+            label="Tipologia attivita' figlio/a",
+            options=["kart", "moto", "altro"],
+            key="child_activity",
+            format_func=activity_cols.get,
+            index=0,
         )
 
         children.append({
@@ -226,7 +239,7 @@ def add_child() -> List[Dict[str, str]]:
             str(FormName.DATA_NASCITA): str(data_nascita_figlio),
             str(FormName.CODICE_FISCALE): child_codice_fiscale.upper(),
             str(FormName.TIPO_UTENTE): child_type,
-            str(FormName.ATTIVITA_UTENTE): child_activity
+            str(FormName.ATTIVITA): child_activity,
         })
 
     return children
@@ -240,6 +253,7 @@ def clear_session_state() -> None:
         FormName.DATA_NASCITA,
         FormName.LUOGO_NASCITA,
         FormName.VIA_RESIDENZA,
+        FormName.LUOGO_RESIDENZA,
         FormName.LUOGO_RESIDENZA,
         FormName.DATA_REGISTRAZIONE,
         FormName.TELEFONO,
@@ -356,16 +370,18 @@ def registration_form(user_to_renew: schemas.User = None):
         )
 
         user_type: str = st.radio(
-            label='Tipologia ammissione',
-            options=['Tesserato/a', 'Socio/a'],
-            index=0,
+            label="Tipologia ammissione",
+            options=["tesserato", "socio"],
+            format_func=tipo_utente_cols.get,
         )
 
         user_activity: str = st.radio(
-            label='Tipologia ammissione',
-            options=['Kart non agonistico', 'Motociclismo non agonistico', 'Frequentazione spazi associativi a scopo ludico/ricreativo (Non sportivo)']
+            label="Tipologia attivita'",
+            options=["kart", "moto", "altro"],
+            format_func=activity_cols.get,
+            index=0,
         )
-
+        st.success(f"user activity {user_activity}")
 
         regolamento_associativo: bool = regolamento_associativo_popup()
         privacy_policy: bool = privacy_policy_popup()
@@ -382,7 +398,7 @@ def registration_form(user_to_renew: schemas.User = None):
             str(FormName.VIA_RESIDENZA): " ".join([x.capitalize() for x in residence_street.split()]),
             str(FormName.TELEFONO): phone_number,
             str(FormName.TIPO_UTENTE): user_type,
-            str(FormName.ATTIVITA_UTENTE): user_activity,
+            str(FormName.ATTIVITA): user_activity,
         }
         update_user_data(user_data)
 
@@ -392,8 +408,8 @@ def registration_form(user_to_renew: schemas.User = None):
         register_button = st.columns(5)[2].button(
             label="Firma",
             disabled=not data_validated,
-            type='primary',
-            use_container_width=True
+            type="primary",
+            use_container_width=True,
         )
 
         if not register_button or not privacy_policy or not regolamento_associativo:
@@ -405,7 +421,6 @@ def registration_form(user_to_renew: schemas.User = None):
             parent_id: Optional[int] = save_user_to_db(user_data)
         if not parent_id:
             return
-
 
         st.write(f"parent_id {parent_id}")
         st.write(f"Children {children}")
@@ -430,9 +445,6 @@ def registration_form(user_to_renew: schemas.User = None):
         st.experimental_rerun()
 
 
-
-
-
 def remove_children_from_db(children_id: List[int]) -> bool:
     response = requests.delete(f"{API_BASE_URL}/childrens/", json=children_id, headers=HEADERS)
 
@@ -451,9 +463,7 @@ def save_children_to_db(children: List[Dict[str, str]], parent_id: int) -> Optio
 
 def save_user_to_db(user_data: Dict[str, str]) -> Optional[int]:
     user_data = {str(k): str(v) for k, v in user_data.items()}
-
     response = requests.post(f"{API_BASE_URL}/users", json=user_data, headers=HEADERS, params={})
-
     if response.status_code == 200:
         st.success("Utente registrato correttamente!")
 
@@ -497,7 +507,7 @@ def already_registered_form() -> Optional[schemas.User]:
     with st.form("already_registered_form"):
         st.markdown("#### Controllo utente registrato")
         fiscal_code: str = st.text_input("Codice Fiscale")
-        if not st.columns(5)[2].form_submit_button("Cerca", use_container_width=True, type='secondary'):
+        if not st.columns(5)[2].form_submit_button("Cerca", use_container_width=True, type="secondary"):
             return None
 
         try:
@@ -536,38 +546,36 @@ def check_if_user_needs_renew(data_registrazione: str, data_nascita: str) -> Tup
 
 
 def prettify_link(link: str, text: str) -> str:
-    # return f'<a href="#controllo-utente-registrato" style="color : #fb2029;"> form seguente</a>'
     return f'<a href="{link}" style="color : #fb2029;"> {text}</a>'
 
 
 def social_media_icons():
     st.markdown("""
-    <div style="position: fixed; bottom: 0; left: 0; width: 100%;  text-align: center; padding: 10px;">
-        <a href="https://twitter.com/" target="_blank"><img width="40" height="40" src="https://img.icons8.com/ios-filled/50/000000/twitterx--v1.png" alt="twitterx--v1"/></a>
-        <a href="https://instagram.com/" target="_blank"><img width="40" height="40" src="https://img.icons8.com/office/50/instagram-new.png" alt="instagram-new"/></a>
-        <a href="" target="_blank"><img width="40" height="40" src="https://img.icons8.com/color/40/facebook-new.png" alt="facebook-new"/></a>
-        <a href="https://tiktok.com/" target="_blank"><img width="40" height="40" src="https://img.icons8.com/ios-filled/50/tiktok--v1.png" alt="tiktok--v1"/></a>
-        <a href="https://github.com/paolo-sofia/kcp-registration" target="_blank"><img width="40" height="40" src="https://img.icons8.com/metro/26/github.png" alt="github"/></a>
+    <div style="text-align: center; padding: 10px;">
+        <a href="https://www.instagram.com/kartcircuitpalazzo_trecchina/" target="_blank"><img width="40" height="40" src="https://img.icons8.com/office/50/instagram-new.png" alt="instagram-new"/></a>
+        <a href="https://www.facebook.com/kartodromo.palazzo" target="_blank"><img width="40" height="40" src="https://img.icons8.com/color/40/facebook-new.png" alt="facebook-new"/></a>
+        <a href="https://github.com/paolo-sofia/kcp-registration" target="_blank"><img width="40" height="40" src="https://img.icons8.com/color-glass/50/github--v1.png" alt="github--v1"/></a>
     </div>
     """, unsafe_allow_html=True)
+
 
 def main():
     st.set_page_config(
         page_title="KCP Registrazione",
-        page_icon="frontend_app/data/img/kcp_logo_small.png",
+        page_icon="data/img/kcp_logo_small.png",
         layout="centered",
         initial_sidebar_state="expanded",
         menu_items={
-            'Get Help'    : 'https://kartodromopalazzo.it/',
-            'Report a bug': "https://github.com/paolo-sofia/kcp-registration/issues",
-            'About'       : "# This is a header. This is an *extremely* cool app!"
-        }
+            "Get Help": "https://kartodromopalazzo.it/",
+            "Report a bug": "https://github.com/paolo-sofia/kcp-registration/issues",
+            "About": "# This is a header. This is an *extremely* cool app!",
+        },
     )
     with st.columns(3)[1]:
         st.image(
             image="frontend_app/data/img/kcp_logo_small.png",
-            use_column_width='auto',
-            width=250
+            use_column_width="auto",
+            width=250,
         )
     st.title("KCP - Registrazione utente")
 
@@ -578,16 +586,15 @@ Per poter continuare devi compilare il modulo di registrazione.
 - Se non sei mai stato qui', devi compilare il {prettify_link('#form-di-registrazione', 'form in basso')}. Se sei un genitore, inserisci i tuoi dati nel form, mentre nella parte {prettify_link('#sezione-genitori', 'Sezione genitori')}, inserisci i dati dei figli che devono fare il giro sui kart
     """, unsafe_allow_html=True)
 
-
     user_to_renew = already_registered_form()
     if user_to_renew:
         st.session_state.renew = True
         update_user_data(user_to_renew.model_dump())
 
-    st.subheader("Form di registrazione", divider='red')
+    st.subheader("Form di registrazione", divider="red")
     registration_form(user_to_renew=user_to_renew)
 
-    st.markdown('---')
+    st.markdown("---")
     social_media_icons()
 
 

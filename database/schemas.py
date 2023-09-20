@@ -10,15 +10,17 @@ class UserBase(BaseModel):
     nome: str
     cognome: str
     data_nascita: str
-    luogo_nascita: Optional[str] = ''
-    luogo_residenza: Optional[str] = ''
-    via_residenza: Optional[str] = ''
-    telefono: Optional[str] = ''
-    tipo_utente: Optional[str] = ''
-    attivita_utente: Optional[str] = ''
+    luogo_nascita: Optional[str] = ""
+    luogo_residenza: Optional[str] = ""
+    via_residenza: Optional[str] = ""
+    telefono: Optional[str] = ""
+    tipo_utente: Optional[str] = ""
+    attivita: Optional[str] = ""
+
 
 class UserCreate(UserBase):
     pass
+
 
 class User(UserBase):
     id: int
@@ -33,8 +35,10 @@ class ChildBase(BaseModel):
     id_genitore: int
     id_figlio: int
 
+
 class ChildCreate(ChildBase):
     pass
+
 
 class Child(ChildBase):
     id: int
@@ -49,8 +53,10 @@ class GroupBase(BaseModel):
     nome: str
     data_assegnazione: datetime
 
+
 class GroupCreate(GroupBase):
     pass
+
 
 class Group(GroupCreate):
     id: int
@@ -65,8 +71,10 @@ class UserGroupBase(BaseModel):
     user_id: int
     assignment_date: datetime
 
+
 class UserGroupCreate(UserGroupBase):
     pass
+
 
 class UserGroup(UserGroupCreate):
     class Config:

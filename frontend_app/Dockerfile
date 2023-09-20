@@ -3,6 +3,8 @@ FROM python:3.11.2-slim-bullseye AS BASE
 WORKDIR /app
 
 COPY frontend_app/requirements.txt /app/frontend_app/requirements.txt
+COPY frontend_app/.streamlit /app/frontend_app/.streamlit
+COPY frontend_app/data /app/frontend_app/data
 RUN pip install -r /app/frontend_app/requirements.txt
 
 COPY frontend_app/main.py /app/main.py

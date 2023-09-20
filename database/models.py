@@ -9,14 +9,17 @@ from database.database import Base
 
 DEFAULT_TIMEZONE: str = "Europe/Rome"
 
+
 class UserTypeEnum(enum.Enum):
-    socio = 'socio'
-    tesserato = 'tesserato'
+    socio = "socio"
+    tesserato = "tesserato"
+
 
 class UserActivityEnum(enum.Enum):
-    kart = 'kart'
-    moto = 'moto'
-    altro = 'altro'
+    kart = "kart"
+    moto = "moto"
+    altro = "altro"
+
 
 class User(Base):
     __tablename__ = "users"
@@ -34,8 +37,9 @@ class User(Base):
     via_residenza: Column = Column(String(100), nullable=True)
     codice_fiscale: Column = Column(String(16), index=True, nullable=False)
     telefono: Column = Column(String(30), nullable=True)
-    tipo_utente: Column = Column(Enum(UserTypeEnum), nullable=True, default=UserTypeEnum.tesserato.value)
-    attivita: Column = Column(Enum(UserActivityEnum), nullable=True, default=UserActivityEnum.kart.value)
+    tipo_utente: Column = Column(Enum("socio", "tesserato", name="tipo_utente_enum"), nullable=True,
+                                 default="tesserato")
+    attivita: Column = Column(Enum("kart", "moto", "altro", name="attivita_enum"), nullable=True, default="kart")
     data_registrazione: Column = Column(Date, default=datetime.today, nullable=False)
 
     utente_gruppo_fk = relationship("UserGroup", back_populates="utente_gruppo")
