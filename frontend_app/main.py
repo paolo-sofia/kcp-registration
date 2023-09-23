@@ -54,8 +54,11 @@ class FormName(StrEnum):
 
 
 def decodifica_codice_fiscale(cod_fiscale: str) -> Dict[str, Any]:
+    if not cod_fiscale:
+        return {}
+
     if not codicefiscale.is_valid(cod_fiscale):
-        st.error("Codice fiscale non valido, inserire codice fiscale corretto")
+        st.error("Il Codice fiscale inserito non e' un codice fiscale italiano valido")
         return {}
 
     decoded_cod_fiscale: Dict[str, Any] = codicefiscale.decode(cod_fiscale)
@@ -279,6 +282,43 @@ def update_user_data(json_data: Dict[str, str]) -> None:
             st.session_state[field] = value
 
 
+def handle_user_fiscal_code(default_values: Dict[str, str], today: pendulum.date) -> Tuple[str, str, str]:
+    fiscal_code = st.text_input(
+        label="Codice Fiscale :red[*]",
+        max_chars=16,
+        disabled=st.session_state.renew,
+        value=default_values[FormName.CODICE_FISCALE],
+    )
+    if decoded_cod_fiscale := decodifica_codice_fiscale(fiscal_code):
+        birth_place = st.text_input(
+            label="Luogo di Nascita :red[*]",
+            value=decoded_cod_fiscale.get(FormName.LUOGO_NASCITA, ""),
+            disabled=st.session_state.renew,
+        )
+        birth_date = st.date_input(
+            label="Data di Nascita :red[*]",
+            value=decoded_cod_fiscale.get(FormName.DATA_NASCITA,
+                                          pendulum.datetime(1970, 1, 1, tz=DEFAULT_TIMEZONE)).date(),
+            min_value=today.replace(year=today.year - 100),
+            max_value=today.replace(year=today.year - 18),
+            disabled=st.session_state.renew,
+        )
+    else:
+        birth_place = st.text_input(
+            label="Luogo di Nascita :red[*]",
+            disabled=st.session_state.renew,
+            value=default_values[FormName.LUOGO_NASCITA],
+        )
+        birth_date = st.date_input(
+            label="Data di Nascita :red[*]",
+            value=default_values[FormName.DATA_NASCITA],
+            min_value=today.replace(year=today.year - 100),
+            max_value=today.replace(year=today.year - 18),
+            disabled=st.session_state.renew,
+        )
+    return fiscal_code, birth_date, birth_place
+
+
 def registration_form(user_to_renew: schemas.User = None):
     if "renew" not in st.session_state or not st.session_state.renew:
         st.session_state["renew"] = bool(user_to_renew)
@@ -308,45 +348,11 @@ def registration_form(user_to_renew: schemas.User = None):
         }
 
     # with st.form('registration_form'):
-    today: pendulum.date = pendulum.today().date()
+    pendulum.today().date()
     with st.container():
         show_regolamento_associativo()
 
-        fiscal_code = st.text_input(
-            label="Codice Fiscale :red[*]",
-            max_chars=16,
-            disabled=st.session_state.renew,
-            value=default_values[FormName.CODICE_FISCALE],
-        )
-
-        if fiscal_code:
-            decoded_cod_fiscale: Dict[str, Any] = decodifica_codice_fiscale(fiscal_code)
-            birth_place = st.text_input(
-                label="Luogo di Nascita :red[*]",
-                value=decoded_cod_fiscale.get(FormName.LUOGO_NASCITA, ""),
-                disabled=st.session_state.renew,
-            )
-            birth_date = st.date_input(
-                label="Data di Nascita :red[*]",
-                value=decoded_cod_fiscale.get(FormName.DATA_NASCITA,
-                                              pendulum.datetime(1970, 1, 1, tz=DEFAULT_TIMEZONE)).date(),
-                min_value=today.replace(year=today.year - 100),
-                max_value=today.replace(year=today.year - 18),
-                disabled=st.session_state.renew,
-            )
-        else:
-            birth_place = st.text_input(
-                label="Luogo di Nascita :red[*]",
-                disabled=st.session_state.renew,
-                value=default_values[FormName.LUOGO_NASCITA],
-            )
-            birth_date = st.date_input(
-                label="Data di Nascita :red[*]",
-                value=default_values[FormName.DATA_NASCITA],
-                min_value=today.replace(year=today.year - 100),
-                max_value=today.replace(year=today.year - 18),
-                disabled=st.session_state.renew,
-            )
+        fiscal_code, birth_date, birth_place = handle_user_fiscal_code()
 
         name = st.text_input(
             label="Nome :red[*]",
